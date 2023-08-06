@@ -10,6 +10,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report
+import requests
+from bs4 import BeautifulSoup
+import lxml
+
 
 PRO_KEY = 'uHFYJYtV4pnqdvOivQceJCaSKwQ2DKsshXDcAvoN'
 
@@ -50,7 +54,7 @@ def main():
     print("Computing top terms...")
     for filename in corpus:
         tfidfs[filename].sort(key=lambda tfidf: tfidf[1], reverse=True)
-        tfidfs[filename] = tfidfs[filename][:10]
+        #tfidfs[filename] = tfidfs[filename][:20]
 
     # Create dictionary (filename, list of keywords)
     keywords = dict()
@@ -87,27 +91,42 @@ def main():
         print(f"Fail: {bill}")
         fails.append(keywords[bill])
 
-    # create a set of all bill text
-    bill_text = set()
-    for document in passes:
-        bill_text.update(document)
-    for document in fails:
-        bill_text.update(document)
+    text = []
+    labels = []
+    # update text and labels with bills and votes for query
+    for keywords in passes:
+        text.append(' '.join(keywords))
+        labels.append(1)
+    for keywords in fails:
+        text.append(' '.join(keywords))
+        labels.append(0)
 
-    # extract features from text
-    training = []
-    training.extend(generate_features(passes, bill_text, "Pass"))
-    training.extend(generate_features(fails, bill_text, "Fail"))
+    # Split the dataset into training and testing sets
+    text_train, text_test, labels_train, labels_test = train_test_split(text, labels, test_size=0.2, random_state=42)
 
-    # classify a new sample
-    classifier = nltk.NaiveBayesClassifier.train(training)
+    # Convert text data into numerical feature vectors
+    vectorizer = CountVectorizer()
+    features_train = vectorizer.fit_transform(text_train)
+    features_test = vectorizer.transform(text_test)
+
+    # Train the SVM model
+    svm = SVC(kernel='linear')
+    svm.fit(features_train, labels_train)
+
+    # Generate classification report to evaluate the model
+    predictions = svm.predict(features_test)
+    print(classification_report(labels_test, predictions))
+
+    # Prompt user for text and predict
     while True:
-        s = input("Enter a bill: ").lower()
-        result = (classify(classifier, s, bill_text))
-        pass_probability = result.prob("Pass")
-        fail_probability = result.prob("Fail")
-        print(f"Probability of pass: {pass_probability}, "
-              f"Probability of fail: {fail_probability}")
+        s1 = input("Enter a bill: ").lower()
+        s2 = input("Enter a bill: ").lower()
+        new_features = vectorizer.transform([s1, s2])
+        new_predictions = svm.predict(new_features)
+        print(new_predictions)
+
+    # ---------------------------------------------------------------------------------------
+
 
 
 def load_data(directory):
@@ -201,5 +220,23 @@ def get_roll_call(contents):
 
 
 if __name__ == "__main__":
-    # get_supporters(161)
-    main()
+    URL = "https://www.congress.gov/118/bills/hr206/BILLS-118hr206ih.xml"
+    page = requests.get(URL)
+    soup = BeautifulSoup(page.content, "html.parser")
+
+    # kill all script and style elements
+    for script in soup(["script", "style"]):
+        script.extract()  # rip it out
+
+    # get text
+    text = soup.get_text()
+
+    # break into lines and remove leading and trailing space on each
+    lines = (line.strip() for line in text.splitlines())
+    # break multi-headlines into a line each
+    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+    # drop blank lines
+    text = '\n'.join(chunk for chunk in chunks if chunk)
+
+    print(text)
+    #main()
