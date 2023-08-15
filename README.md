@@ -1,5 +1,5 @@
 # congressional
-'''
+
 Creates an SVM based machine learning model that can be used to predict whether a specific member of congress (query) will vote to pass or fail a piece of legislation. Has an average f1 accuracy score of 0.88
 
 Usage:
@@ -18,4 +18,3 @@ python congressional.py congressdir/data/118/bills scott peters
     weighted avg   0.88      0.88      0.87        24
 
 
-'''
