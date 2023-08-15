@@ -14,8 +14,8 @@ python congressional.py congressdir/data/118/bills scott peters
            1       0.90      0.82      0.86        11
 
     accuracy                           0.88        24
-   macro avg       0.88      0.87      0.87        24
-weighted avg       0.88      0.88      0.87        24
+    macro avg       0.88      0.87      0.87        24
+    weighted avg       0.88      0.88      0.87        24
 
 
 '''
