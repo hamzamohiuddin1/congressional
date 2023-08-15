@@ -1,18 +1,13 @@
 from congress import Congress
 import math
 import nltk
-import random
-# nltk.download('punkt')
 import os
 import sys
-import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report
-import requests
-from bs4 import BeautifulSoup
-import lxml
+
 
 
 PRO_KEY = 'uHFYJYtV4pnqdvOivQceJCaSKwQ2DKsshXDcAvoN'
@@ -116,15 +111,20 @@ def main():
     # Generate classification report to evaluate the model
     predictions = svm.predict(features_test)
     print(classification_report(labels_test, predictions))
-
+    '''
     # Prompt user for text and predict
     while True:
         s1 = input("Enter a bill: ").lower()
-        s2 = input("Enter a bill: ").lower()
+        s2 = ''
         new_features = vectorizer.transform([s1, s2])
-        new_predictions = svm.predict(new_features)
-        print(new_predictions)
-
+        new_predictions = svm.predict(new_features)[0]
+        if new_predictions == 1:
+            print(f"SVM predicts that {query} will vote to pass this legislation")
+        elif new_predictions == 0:
+            print(f"SVM predicts that {query} will vote to fail this legislation")
+        else:
+            print("Error")
+    '''
     # ---------------------------------------------------------------------------------------
 
 
@@ -220,23 +220,4 @@ def get_roll_call(contents):
 
 
 if __name__ == "__main__":
-    URL = "https://www.congress.gov/118/bills/hr206/BILLS-118hr206ih.xml"
-    page = requests.get(URL)
-    soup = BeautifulSoup(page.content, "html.parser")
-
-    # kill all script and style elements
-    for script in soup(["script", "style"]):
-        script.extract()  # rip it out
-
-    # get text
-    text = soup.get_text()
-
-    # break into lines and remove leading and trailing space on each
-    lines = (line.strip() for line in text.splitlines())
-    # break multi-headlines into a line each
-    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-    # drop blank lines
-    text = '\n'.join(chunk for chunk in chunks if chunk)
-
-    print(text)
-    #main()
+    main()
