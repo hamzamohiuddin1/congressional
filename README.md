@@ -8,7 +8,7 @@ python congressional.py congressdir/data/118/bills {query}
 Example:
 python congressional.py congressdir/data/118/bills scott peters
 
-  precision    recall  f1-score   support
+                precision    recall  f1-score   support
 
            0       0.86      0.92      0.89        13
            1       0.90      0.82      0.86        11
